@@ -14,7 +14,8 @@ import java.sql.ResultSet;
  */
 public class login extends javax.swing.JFrame {
     
-    public static String username_CF, userID_CF;
+    public static String username_CF;
+    public static int userID_CF;
         
     public login() {
         initComponents();
@@ -112,7 +113,8 @@ public class login extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         String username_SQL = username.getText();
         String password_SQL = password.getText();
-        String user_ID, vardas;
+        String vardas;
+        int user_ID;
         try{
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             java.sql.Connection con = DriverManager.getConnection("jdbc:sqlserver://DESKTOP-SC57SQD\\SQLBRS:1433;databaseName=Books;user=SQL;password=admin");
@@ -122,7 +124,7 @@ public class login extends javax.swing.JFrame {
             ResultSet rs = st.executeQuery(query1);
             if(rs.next()){
             JOptionPane.showMessageDialog(null, "Login successfull");
-            user_ID=rs.getString("user_ID");
+            user_ID=rs.getInt("user_ID");
             vardas=rs.getString("username");
             userID_CF = user_ID;
             username_CF = vardas;
@@ -133,7 +135,7 @@ public class login extends javax.swing.JFrame {
             }
         }
         catch(Exception e){
-            JOptionPane.showMessageDialog(null, "Error occured while trying to connect to the database");
+            JOptionPane.showMessageDialog(null, e);
         }
         dispose();
         

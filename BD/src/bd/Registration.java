@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JOptionPane;
 
 /**
@@ -17,6 +18,7 @@ import javax.swing.JOptionPane;
  */
 public class Registration extends javax.swing.JFrame {
 
+    public int user_ID = 1;
     /**
      * Creates new form Registration
      */
@@ -40,7 +42,7 @@ public class Registration extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         password = new javax.swing.JTextField();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel1.setText("Registration");
@@ -105,7 +107,6 @@ public class Registration extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
        String username_SQL = username.getText();
        String password_SQL = password.getText();
-       UUID user_ID = UUID.randomUUID();
         try{
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             Connection con = DriverManager.getConnection("jdbc:sqlserver://DESKTOP-SC57SQD\\SQLBRS:1433;databaseName=Books;user=SQL;password=admin");
@@ -113,6 +114,7 @@ public class Registration extends javax.swing.JFrame {
             Statement stmt = con.createStatement();
             stmt.executeUpdate(query);
             JOptionPane.showMessageDialog(null, "Registration successfull");
+            user_ID++;
             }
         
         catch(Exception e){

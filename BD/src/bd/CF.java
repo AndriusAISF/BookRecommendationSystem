@@ -5,7 +5,10 @@
  */
 package bd;
 
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,11 +27,16 @@ import org.apache.mahout.cf.taste.impl.neighborhood.ThresholdUserNeighborhood;
 import org.apache.mahout.cf.taste.impl.recommender.GenericUserBasedRecommender;
 import org.apache.mahout.cf.taste.impl.similarity.PearsonCorrelationSimilarity;
 import org.apache.mahout.cf.taste.model.DataModel;
+import org.apache.mahout.cf.taste.model.JDBCDataModel;
 import org.apache.mahout.cf.taste.neighborhood.UserNeighborhood;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Recommender;
 import org.apache.mahout.cf.taste.recommender.UserBasedRecommender;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
+import javax.sql.DataSource;
+import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
+import com.opencsv.CSVWriter;
+
 
 /**
  *
@@ -36,7 +44,8 @@ import org.apache.mahout.cf.taste.similarity.UserSimilarity;
  */
 public class CF extends javax.swing.JFrame {
 
-public static String vartotojas, vartotojo_ID;
+public static String vartotojas, booktest; 
+public static int vartotojo_ID;
 public static int row;
     public CF() {
         initComponents();
@@ -98,6 +107,7 @@ public static int row;
         rating.setMajorTickSpacing(1);
         rating.setMaximum(5);
         rating.setMinimum(1);
+        rating.setPaintLabels(true);
         rating.setValue(1);
 
         save.setText("Save");
@@ -211,7 +221,8 @@ public static int row;
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         Connection con = DriverManager.getConnection("jdbc:sqlserver://localhost:1433;databaseName=Books;user=SQL;password=admin");
         String book_ID = (jTable1.getModel().getValueAt(row, 4).toString());
-        int ratings = rating.getValue();
+        int i = rating.getValue();
+        double ratings = i;
         String query = "INSERT INTO ratings([user_ID], [item_ID], [rating]) VALUES ('"+vartotojo_ID+"', '"+book_ID+"', '"+ratings+"')";
         Statement stmt = con.createStatement();
         stmt.executeUpdate(query);
@@ -305,16 +316,58 @@ public static int row;
           
           public void CF_recommendation() throws IOException, TasteException
           {
-        DataModel model = new FileDataModel(new File("C:/Users/Andrius/Desktop/bd/input.csv"));    	
+        try{
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            Connection con = DriverManager.getConnection("jdbc:sqlserver://DESKTOP-SC57SQD\\SQLBRS:1433;databaseName=Books;user=SQL;password=admin");
+            String csvFilePath = "ratings_input.csv";
+            String query1="SELECT * FROM dbo.ratings ORDER BY User_ID";
+            Statement st= con.createStatement();
+            ResultSet rs = st.executeQuery(query1);
+            CSVWriter writer = new CSVWriter(new FileWriter("ratings_input.csv"),',',CSVWriter.NO_QUOTE_CHARACTER);
+      String data[] = new String[3];
+      while(rs.next()) {
+         data[0] = rs.getString("User_ID");
+         data[1] = rs.getString("Item_ID");
+         data[2] = rs.getString("rating");
+         writer.writeNext(data);
+      }
+            st.close();
+            writer.flush();
+        }
+        catch(Exception e){
+            JOptionPane.showMessageDialog(null, "Error occured while connecting to the database");
+        }     
+        DataModel model = new FileDataModel(new File("ratings_input.csv")); 
 	UserSimilarity similarity = new PearsonCorrelationSimilarity(model);
 	UserNeighborhood neighborhood = new ThresholdUserNeighborhood(0.1, similarity, model);
 	UserBasedRecommender recommender = new GenericUserBasedRecommender(model, neighborhood, similarity);
-	List<RecommendedItem> recommendations = recommender.recommend(2, 3);
+	List<RecommendedItem> recommendations = recommender.recommend(vartotojo_ID, 1);
 	for (RecommendedItem recommendation : recommendations) {
-            String books = Long.toString(recommendation.getItemID());
-            System.out.println(books);
+            long book = recommendation.getItemID();
+            booktest = String.valueOf(book);
+            show_reco();
 	}
+        
           }
+        
+        public void show_reco()
+        {
+            try{
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            Connection con = DriverManager.getConnection("jdbc:sqlserver://DESKTOP-SC57SQD\\SQLBRS:1433;databaseName=Books;user=SQL;password=admin");
+            String query1="SELECT title FROM dbo.books WHERE bookID= '"+ booktest +"'";
+            System.out.println(query1);
+            Statement st= con.createStatement();
+            ResultSet rs = st.executeQuery(query1);
+            while(rs.next()){
+                jTextArea1.setText(rs.getString("title"));
+                System.out.println(rs.getString("title"));
+            }
+        }
+        catch(Exception e){
+            JOptionPane.showMessageDialog(null, "Error occured while connecting to the database");
+        }
+        }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -332,4 +385,8 @@ public static int row;
     private javax.swing.JButton save;
     public static javax.swing.JLabel username;
     // End of variables declaration//GEN-END:variables
+
+    private DataModel FileDataModel(File file) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
